@@ -85,10 +85,9 @@
             transition: transform 0.5s ease;
         }
         
-        /* CORREÇÃO PARA NÃO ESTICAR O IPHONE 17 */
         .card img.iphone17-fix {
             transform: scale(1.4);
-            object-fit: contain; /* Garante que não estique */
+            object-fit: contain;
         }
         
         .card:hover img { transform: scale(1.1); }
@@ -101,20 +100,16 @@
         .badge-novo { background: var(--apple-blue); color: white; }
         .badge-seminovo { background: var(--apple-dark-blue); color: #d1d1d1; }
         
-        /* AJUSTES MOBILE */
         @media (max-width: 600px) { 
             .card { padding: 12px; padding-top: 45px; border-radius: 25px; }
             .img-container { height: 180px; border-radius: 20px; padding-top: 0 !important; } 
             .card img.iphone17-fix { transform: scale(1.2); }
             .badge { top: 12px; left: 12px; padding: 6px 16px; font-size: 0.65rem; }
-            .nav-search { display: block !important; max-width: 150px; }
-            .nav-search input { font-size: 0.8rem; padding: 6px 12px; }
-            #product-page h1 { font-size: 2.2rem !important; }
-            #product-page .price-title { font-size: 1.8rem !important; }
         }
 
         .product-info { margin-top: 5px; width: 100%; text-align: left; padding-left: 5px; }
-        .product-info h3 { font-size: 1.1rem; margin: 0; color: white; font-weight: 400; }
+        /* AJUSTE: NOME DO APARELHO REDUZIDO PARA APROX. 80% */
+        .product-info h3 { font-size: 0.75rem; margin: 0; color: #ccc; font-weight: 400; letter-spacing: 0.3px; }
         .price { font-size: 1.4rem; font-weight: 700; margin: 5px 0; color: #fff; }
         .btn-details { background: white; color: black; border: none; padding: 12px; border-radius: 40px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 10px; }
 
@@ -200,7 +195,6 @@
         <button onclick="salvarProduto()" style="width:100%; padding:15px; background:var(--apple-blue); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:bold;">Publicar Produto</button>
         
         <div class="admin-list">
-            <h3>Gerenciar Estoque</h3>
             <div id="lista-admin"></div>
         </div>
         <button onclick="fecharModais()" style="width:100%; margin-top:20px; background:#333; color:white; border:none; padding:10px; border-radius:10px; cursor:pointer;">Sair</button>
@@ -220,7 +214,7 @@
 
     let produtos = JSON.parse(localStorage.getItem('istore_data')) || aparelhosIniciais;
     let imagemTmp = "";
-    let filtroGlobalAtivo = 'Todos';
+    let filtroGlobalAtivo = "Todos";
 
     function toggleBateriaAdmin() {
         const cat = document.getElementById('cat_adm').value;
@@ -228,22 +222,27 @@
     }
 
     function syncSearch(input) {
-        const val = input.value;
-        document.getElementById('inputPesquisa').value = val;
-        document.querySelector('.nav-search input').value = val;
+        document.getElementById('inputPesquisa').value = input.value;
+        document.querySelector('.nav-search input').value = input.value;
         filtrarProdutos();
     }
 
     window.onscroll = function() {
+        if (document.getElementById('shop-view').style.display === 'none') return;
+        
         const navSearch = document.getElementById("navSearch");
         const mainSearch = document.getElementById("mainSearchContainer");
+        const title = document.getElementById("main-title");
         const rect = mainSearch.getBoundingClientRect();
+        
         if (rect.top <= 75) { 
             navSearch.classList.add("visible");
             mainSearch.classList.add("hidden"); 
+            title.style.opacity = "0";
         } else {
             navSearch.classList.remove("visible");
             mainSearch.classList.remove("hidden"); 
+            title.style.opacity = "1";
         }
     };
 
@@ -264,11 +263,10 @@
             const matchesTermo = p.nome.toLowerCase().includes(termo);
             return matchesFiltro && matchesTermo;
         }).forEach(p => {
-            const badgeClass = p.categoria === 'Seminovo' ? 'badge-seminovo' : 'badge-novo';
             const imgClass = (p.nome.includes('17') || p.isIphone17) ? 'iphone17-fix' : '';
             vitrine.innerHTML += `
                 <div class="card" onclick="verAparelho(${p.id})">
-                    <span class="badge ${badgeClass}">${p.categoria}</span>
+                    <span class="badge ${p.categoria === 'Seminovo' ? 'badge-seminovo' : 'badge-novo'}">${p.categoria}</span>
                     <div class="img-container"><img src="${p.imagem}" class="${imgClass}"></div>
                     <div class="product-info"><h3>${p.nome}</h3><div class="price">R$ ${p.preco.toLocaleString('pt-BR')}</div></div>
                     <button class="btn-details">Ver Detalhes</button>
@@ -281,22 +279,16 @@
         const p = produtos.find(i => i.id === id);
         document.getElementById('shop-view').style.display = 'none';
         document.getElementById('product-page').style.display = 'block';
+        document.getElementById("navSearch").classList.remove("visible");
         const bateriaHtml = p.bateria ? `<li><span>Bateria</span><b>${p.bateria}%</b></li>` : '';
-
         document.getElementById('product-content').innerHTML = `
             <div style="display:flex; flex-wrap:wrap; gap:50px; align-items: flex-start; justify-content: center;">
-                <div style="background:#fff; padding:30px; border-radius:30px; max-width:400px;">
-                    <img src="${p.imagem}" style="width:100%; height:auto; object-fit: contain;">
-                </div>
+                <div style="background:#fff; padding:30px; border-radius:30px; max-width:400px;"><img src="${p.imagem}" style="width:100%; height:auto; object-fit: contain;"></div>
                 <div style="flex:1; min-width:320px; color:white;">
                     <span style="color:var(--apple-blue); font-weight:bold;">iSTORE PREMIUM</span>
                     <h1 style="font-size:3.5rem; margin:10px 0">${p.nome}</h1>
                     <div class="price-title" style="font-size:2.5rem; font-weight:700; color:var(--apple-blue);">R$ ${p.preco.toLocaleString('pt-BR')}</div>
-                    <ul class="specs-list">
-                        <li><span>Condição</span><b>${p.categoria}</b></li>
-                        ${bateriaHtml}
-                        <li><span>Destaques</span><b>${p.info}</b></li>
-                    </ul>
+                    <ul class="specs-list"><li><span>Condição</span><b>${p.categoria}</b></li>${bateriaHtml}<li><span>Destaques</span><b>${p.info}</b></li></ul>
                     <a href="https://wa.me/5562999999999" target="_blank" style="background:#25d366; color:white; padding:22px; display:block; text-align:center; text-decoration:none; border-radius:18px; font-weight:bold; font-size:1.1rem; margin-top:30px">WhatsApp</a>
                 </div>
             </div>`;
@@ -305,7 +297,13 @@
     function irParaHome() { 
         document.getElementById('shop-view').style.display = 'block'; 
         document.getElementById('product-page').style.display = 'none'; 
+        const navSearch = document.getElementById("navSearch");
+        const mainSearch = document.getElementById("mainSearchContainer");
+        const title = document.getElementById("main-title");
         window.scrollTo(0,0);
+        navSearch.classList.remove("visible");
+        mainSearch.classList.remove("hidden");
+        title.style.opacity = "1";
         filtrarProdutos();
     }
 
@@ -327,17 +325,8 @@
     function salvarProduto() {
         const nome = document.getElementById('nome_adm').value;
         const preco = document.getElementById('preco_adm').value;
-        if(!nome || !preco || !imagemTmp) return alert("Preencha todos os campos!");
-        
-        produtos.push({
-            id: Date.now(),
-            nome: nome,
-            preco: parseFloat(preco),
-            categoria: document.getElementById('cat_adm').value,
-            bateria: document.getElementById('bateria_adm').value || null,
-            imagem: imagemTmp,
-            info: document.getElementById('desc_adm').value
-        });
+        if(!nome || !preco || !imagemTmp) return alert("Preencha tudo!");
+        produtos.push({ id: Date.now(), nome, preco: parseFloat(preco), categoria: document.getElementById('cat_adm').value, bateria: document.getElementById('bateria_adm').value || null, imagem: imagemTmp, info: document.getElementById('desc_adm').value });
         localStorage.setItem('istore_data', JSON.stringify(produtos));
         alert("Publicado!");
         filtrarProdutos();
@@ -347,9 +336,7 @@
         const lista = document.getElementById('lista-admin');
         if(!lista) return;
         lista.innerHTML = '';
-        produtos.forEach(p => {
-            lista.innerHTML += `<div class="admin-item"><span>${p.nome}</span><span style="color:red; cursor:pointer" onclick="removerProduto(${p.id})">Excluir</span></div>`;
-        });
+        produtos.forEach(p => { lista.innerHTML += `<div class="admin-item"><span>${p.nome}</span><span style="color:red; cursor:pointer" onclick="removerProduto(${p.id})">Excluir</span></div>`; });
     }
 
     function removerProduto(id) {
@@ -364,14 +351,12 @@
         if(document.getElementById('admin-pass').value === "admin123") {
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('admin-section').style.display = 'block';
+            atualizarListaAdmin();
         } else { alert("Erro!"); }
     }
 
     function abrirLogin() { document.getElementById('login-section').style.display = 'block'; }
-    function fecharModais() { 
-        document.getElementById('login-section').style.display = 'none'; 
-        document.getElementById('admin-section').style.display = 'none'; 
-    }
+    function fecharModais() { document.getElementById('login-section').style.display = 'none'; document.getElementById('admin-section').style.display = 'none'; }
 
     window.onload = () => {
         generateSeamlessWave('w1', 400, 50, 2);
